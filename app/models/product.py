@@ -100,6 +100,6 @@ class Product():
         with open(f"app/opinions/{self.product_id}.json", "w", encoding="UTF-8") as jf:
             json.dump([opinion.to_dict() for opinion in self.opinions], jf, indent=4, ensure_ascii=False)
         pass
-    
-    def export_product():
+
+    def export_product(self):
         pass
