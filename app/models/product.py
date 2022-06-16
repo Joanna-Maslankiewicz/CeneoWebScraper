@@ -18,30 +18,6 @@ class Product():
         self.cons_count = cons_count
         self.average_score = average_score
 
-    def __str__(self):
-        return f"""product_id: {self.product_id}<br>
-        product_name: {self.product_name}<br>
-        opinions_count: {self.opinions_count}<br>
-        pros_count: {self.pros_count}<br>
-        cons_count: {self.cons_count}<br>
-        average_score: {self.average_score}<br>
-        opinions: <br><br>
-        """ + "<br><br>".join(str(opinion) for opinion in self.opinions)
-
-    def __repr__(self):
-        return f"Product(product_id={self.product_id}, product_name={self.product_name}, opinions_count={self.opinions_count}, pros_count={self.pros_count}, cons_count={self.cons_count}, average_score={self.average_score}, opinions: [" + ", ".join(opinion.__repr__() for opinion in self.opinions) + "])"
-
-    def to_dict(self):
-        return {
-            "product_id": self.product_id,
-            "product_name": self.product_name,
-            "opinions_count": self.opinions_count,
-            "pros_count": self.pros_count,
-            "cons_count": self.cons_count,
-            "average_score": self.average_score,
-            "opinions": [opinion.to_dict() for opinion in self.opinions]
-        }
-
     def extract_name(self):
         url = f"https://www.ceneo.pl/{self.product_id}#tab=reviews"
         response = requests.get(url)
@@ -65,7 +41,7 @@ class Product():
         return self
     
     def opinions_to_df(self):
-        opinions = pd.read_json(json.dumps([opinion.to_dict() for opinion in self.opinions]))
+        opinions = pd.read_json(json.dumps(self.opinions_to_dict()))
         opinions["stars"] = opinions["stars"].map(lambda x: float(x.split("/")[0].replace(",", ".")))
         return opinions
 
@@ -75,7 +51,6 @@ class Product():
         self.pros_count = int(opinions["pros"].map(bool).sum())
         self.cons_count = int(opinions["cons"].map(bool).sum())
         self.average_score = opinions["stars"].mean().round(2)
-        
         return self
     
     def draw_charts(self):
@@ -104,6 +79,30 @@ class Product():
         plt.savefig(f"app/static/plots/{self.product_id}_stars.png")
         plt.close()
         return self
+
+    def __str__(self) -> str:
+        return f"""product_id: {self.product_id}<br>
+        product_name: {self.product_name}<br>
+        opinions_count: {self.opinions_count}<br>
+        pros_count: {self.pros_count}<br>
+        cons_count: {self.cons_count}<br>
+        average_score: {self.average_score}<br>
+        opinions: <br><br>
+        """ + "<br><br>".join(str(opinion) for opinion in self.opinions)
+
+    def __repr__(self) -> str:
+        return f"Product(product_id={self.product_id}, product_name={self.product_name}, opinions_count={self.opinions_count}, pros_count={self.pros_count}, cons_count={self.cons_count}, average_score={self.average_score}, opinions: [" + ", ".join(opinion.__repr__() for opinion in self.opinions) + "])"
+
+    def to_dict(self) -> dict:
+        return {
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "opinions_count": self.opinions_count,
+            "pros_count": self.pros_count,
+            "cons_count": self.cons_count,
+            "average_score": self.average_score,
+            "opinions": [opinion.to_dict() for opinion in self.opinions]
+        }
     
     def stats_to_dict(self):
         return {
@@ -114,19 +113,22 @@ class Product():
             "cons_count": self.cons_count,
             "average_score": self.average_score,
         }
+    
+    def opinions_to_dict(self):
+        return [opinion.to_dict() for opinion in self.opinions]
 
     def export_opinions(self):
         if not os.path.exists("app/opinions"):
             os.makedirs("app/opinions")
         with open(f"app/opinions/{self.product_id}.json", "w", encoding="UTF-8") as jf:
-            json.dump([opinion.to_dict() for opinion in self.opinions], jf, indent=4, ensure_ascii=False)
+            json.dump(self.opinions_to_dict(), jf, indent=4, ensure_ascii=False)
 
     def export_product(self):
         if not os.path.exists("app/products"):
             os.makedirs("app/products")
         with open(f"app/products/{self.product_id}.json", "w", encoding="UTF-8") as jf:
             json.dump(self.stats_to_dict(), jf, indent=4, ensure_ascii=False)
-
+    
     def import_product(self):
         if os.path.exists(f"app/products/{self.product_id}.json"):
             with open(f"app/products/{self.product_id}.json", "r", encoding="UTF-8") as jf:

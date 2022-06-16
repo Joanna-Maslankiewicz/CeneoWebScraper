@@ -21,7 +21,6 @@ def extract():
         else:
             error = "Ups... coś poszło nie tak"
             return render_template("extract.html.jinja", error=error)
-
         return redirect(url_for('product', product_id=product_id))
     else:
         return render_template("extract.html.jinja")
@@ -41,5 +40,4 @@ def product(product_id):
     product.import_product()
     stats = product.stats_to_dict()
     opinions = product.opinions_to_df()
-
     return render_template("product.html.jinja", product_id=product_id, stats=stats, opinions=opinions)
